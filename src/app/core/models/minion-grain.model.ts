@@ -1,0 +1,33 @@
+export interface MinionGrain {
+  minionId: string;
+  os: string;
+  osVersion: string;
+  osRelease: string;
+  osFinger: string;
+  kernel: string;
+  kernelRelease: string;
+  kernelVersion: string;
+  cpuArch: string;
+  cpuModel: string;
+  numCpus: number;
+  numGpus: number;
+  memTotal: number;
+  manufacturer: string;
+  productName: string;
+  boardName: string;
+  serialNumber: string;
+  biosVendor: string;
+  biosVersion: string;
+  fqdn: string;
+  host: string;
+  domain: string;
+  ipAddresses: string[];
+  saltVersion: string;
+  master: string;
+  init: string;
+  virtual: string;
+  machineId: string;
+  customGrains: { [key: string]: string };
+  lastUpdated: string;
+  createdAt: string;
+}
