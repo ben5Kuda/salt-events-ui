@@ -1,0 +1,46 @@
+<h2 mat-dialog-title>
+  <mat-icon>vpn_key</mat-icon>
+  Public Key Details
+</h2>
+
+<mat-dialog-content>
+  <div class="key-details">
+    <div class="detail-row">
+      <span class="label">Minion ID:</span>
+      <span class="value">{{ data.minionId }}</span>
+    </div>
+    <div class="detail-row">
+      <span class="label">Key State:</span>
+      <span class="value">
+            <span [class]="'badge badge-' + data.keyState">
+              {{ data.keyState | titlecase }}
+            </span>
+          </span>
+    </div>
+    <div class="detail-row">
+      <span class="label">Cluster:</span>
+      <span class="value">{{ data.cluster || 'N/A' }}</span>
+    </div>
+    <div class="detail-row">
+      <span class="label">Timestamp:</span>
+      <span class="value">{{ data.timestamp | date:'full' }}</span>
+    </div>
+  </div>
+
+  <div class="public-key-section">
+    <div class="section-header">
+      <h3>Public Key</h3>
+      <button
+        mat-icon-button
+        matTooltip="Copy to clipboard"
+        (click)="copyToClipboard()">
+        <mat-icon>content_copy</mat-icon>
+      </button>
+    </div>
+    <pre class="public-key">{{ data.publicKey || 'No public key available' }}</pre>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Close</button>
+</mat-dialog-actions>

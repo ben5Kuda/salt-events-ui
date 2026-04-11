@@ -53,9 +53,7 @@ export const MinionGrainsStore = signalStore(
         patchState(store, { isLoading: true, error: null });
 
         try {
-          console.log('Loading minions...'); // ✅ Add this
           const minions = await lastValueFrom(service.getAllMinions());
-          console.log('Minions loaded:', minions); // ✅ Add this
           patchState(store, {
             minions,
             isLoading: false,

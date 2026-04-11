@@ -1,0 +1,134 @@
+@if (isLoading) {
+  <div class="loading">
+    <mat-spinner diameter="50"></mat-spinner>
+  </div>
+} @else if (keys.length === 0) {
+  <div class="no-data">
+    <mat-icon>inbox</mat-icon>
+    <p>No {{ state }} keys found</p>
+  </div>
+} @else {
+  <div class="table-actions">
+    @if (store.hasSelectedKeys()) {
+      <div class="selection-info">
+        <span>{{ store.selectedCount() }} selected</span>
+        <button mat-button (click)="store.clearSelection()">
+          <mat-icon>clear</mat-icon>
+          Clear Selection
+        </button>
+      </div>
+    }
+
+    @if (state === 'pending') {
+      <div class="action-buttons">
+        <button
+          mat-raised-button
+          color="primary"
+          [disabled]="!store.hasSelectedKeys()"
+          (click)="acceptSelected()">
+          <mat-icon>check</mat-icon>
+          Accept Key
+        </button>
+        <button
+          mat-raised-button
+          color="warn"
+          [disabled]="!store.hasSelectedKeys()"
+          (click)="rejectSelected()">
+          <mat-icon>close</mat-icon>
+          Reject Key
+        </button>
+        <button
+          mat-raised-button
+          [disabled]="!store.hasSelectedKeys()"
+          (click)="deleteSelected()">
+          <mat-icon>delete</mat-icon>
+          Delete Key
+        </button>
+      </div>
+    }
+
+    @if (state === 'accepted' || state === 'rejected') {
+      <div class="action-buttons">
+        <button
+          mat-raised-button
+          color="warn"
+          [disabled]="!store.hasSelectedKeys()"
+          (click)="deleteSelected()">
+          <mat-icon>delete</mat-icon>
+          Delete Key
+        </button>
+      </div>
+    }
+  </div>
+
+  <table mat-table [dataSource]="keys" class="keys-table">
+    <!-- Checkbox Column -->
+    <ng-container matColumnDef="select">
+      <th mat-header-cell *matHeaderCellDef>
+        <mat-checkbox
+          (change)="$event ? toggleAll() : null"
+          [checked]="isAllSelected()"
+          [indeterminate]="hasSelection() && !isAllSelected()">
+        </mat-checkbox>
+      </th>
+      <td mat-cell *matCellDef="let key">
+        <mat-checkbox
+          (click)="$event.stopPropagation()"
+          (change)="$event ? store.toggleKeySelection(key.minionId) : null"
+          [checked]="isSelected(key.minionId)">
+        </mat-checkbox>
+      </td>
+    </ng-container>
+
+    <!-- Cluster Column -->
+    <ng-container matColumnDef="cluster">
+      <th mat-header-cell *matHeaderCellDef>Cluster/Master</th>
+      <td mat-cell *matCellDef="let key">
+        <mat-chip class="cluster-chip">{{ key.cluster || 'N/A' }}</mat-chip>
+      </td>
+    </ng-container>
+
+    <!-- Minion ID Column -->
+    <ng-container matColumnDef="minionId">
+      <th mat-header-cell *matHeaderCellDef>Minion ID</th>
+      <td mat-cell *matCellDef="let key">
+        <span class="minion-id">{{ key.minionId }}</span>
+      </td>
+    </ng-container>
+
+    <!-- Key State Column -->
+    <ng-container matColumnDef="keyState">
+      <th mat-header-cell *matHeaderCellDef>Key State</th>
+      <td mat-cell *matCellDef="let key">
+        <mat-chip [class]="'state-chip state-' + key.keyState">
+          {{ key.keyState | titlecase }}
+        </mat-chip>
+      </td>
+    </ng-container>
+
+    <!-- Timestamp Column -->
+    <ng-container matColumnDef="timestamp">
+      <th mat-header-cell *matHeaderCellDef>Last Updated</th>
+      <td mat-cell *matCellDef="let key">
+        {{ key.timestamp | date:'short' }}
+      </td>
+    </ng-container>
+
+    <!-- Actions Column -->
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef>Actions</th>
+      <td mat-cell *matCellDef="let key">
+        <button
+          mat-icon-button
+          matTooltip="View Public Key"
+          (click)="viewPublicKey(key)">
+          <mat-icon>visibility</mat-icon>
+        </button>
+
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="key-row"></tr>
+  </table>
+}

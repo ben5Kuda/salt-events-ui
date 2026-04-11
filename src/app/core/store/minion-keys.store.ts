@@ -36,14 +36,22 @@ export const MinionKeysStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
   withComputed(({ pending, accepted, rejected, denied, selectedKeys, summary }) => ({
-    // ✅ Map all keys with their status
+
     keys: computed(() => {
       const allKeys: (MinionKey & { status: string })[] = [];
 
-      pending().forEach(key => allKeys.push({ ...key, status: 'pending' }));
-      accepted().forEach(key => allKeys.push({ ...key, status: 'accepted' }));
-      rejected().forEach(key => allKeys.push({ ...key, status: 'rejected' }));
-      denied().forEach(key => allKeys.push({ ...key, status: 'denied' }));
+      for (const key of pending()) {
+        allKeys.push({...key, status: 'pending'});
+      }
+      for (const key of accepted()) {
+        allKeys.push({...key, status: 'accepted'});
+      }
+      for (const key of rejected()) {
+        allKeys.push({...key, status: 'rejected'});
+      }
+      for (const key of denied()) {
+        allKeys.push({...key, status: 'denied'});
+      }
 
       return allKeys;
     }),

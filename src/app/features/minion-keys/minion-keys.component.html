@@ -1,0 +1,225 @@
+<div class="minion-keys-container">
+  <div class="header">
+    <h1>
+      <mat-icon>vpn_key</mat-icon>
+      Minion Keys
+    </h1>
+    <button mat-raised-button color="primary" (click)="refresh()">
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+  </div>
+
+  @if (store.isLoading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Loading minion keys...</p>
+    </div>
+  } @else {
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+      <mat-card class="summary-card">
+        <mat-icon class="card-icon">vpn_key</mat-icon>
+        <div class="card-content">
+          <div class="card-value">{{ store.totalKeys() }}</div>
+          <div class="card-label">Total Keys</div>
+        </div>
+      </mat-card>
+
+      <mat-card class="summary-card accepted">
+        <mat-icon class="card-icon">check_circle</mat-icon>
+        <div class="card-content">
+          <div class="card-value">{{ store.acceptedCount() }}</div>
+          <div class="card-label">Accepted</div>
+        </div>
+      </mat-card>
+
+      <mat-card class="summary-card pending">
+        <mat-icon class="card-icon">schedule</mat-icon>
+        <div class="card-content">
+          <div class="card-value">{{ store.pendingCount() }}</div>
+          <div class="card-label">Pending</div>
+        </div>
+      </mat-card>
+
+      <mat-card class="summary-card rejected">
+        <mat-icon class="card-icon">cancel</mat-icon>
+        <div class="card-content">
+          <div class="card-value">{{ store.rejectedCount() }}</div>
+          <div class="card-label">Rejected</div>
+        </div>
+      </mat-card>
+    </div>
+
+    <!-- Tabs -->
+    <mat-tab-group class="keys-tabs">
+      <!-- All Keys Tab -->
+      <mat-tab label="All Keys">
+        <ng-template matTabContent>
+          <div class="tab-content">
+            <mat-card>
+              <mat-form-field class="search-field">
+                <mat-label>Search</mat-label>
+                <input matInput (keyup)="applyFilter($event, allKeysDataSource)" placeholder="Search minion ID...">
+                <mat-icon matSuffix>search</mat-icon>
+              </mat-form-field>
+
+              <div class="table-container">
+                <table mat-table [dataSource]="allKeysDataSource" matSort class="keys-table">
+                  <!-- Minion ID Column -->
+                  <ng-container matColumnDef="minionId">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Minion ID</th>
+                    <td mat-cell *matCellDef="let row">{{ row.minionId }}</td>
+                  </ng-container>
+
+                  <!-- Status Column -->
+                  <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+                    <td mat-cell *matCellDef="let row">
+                      <mat-chip [class]="'status-chip ' + row.status">
+                        {{ row.status | titlecase }}
+                      </mat-chip>
+                    </td>
+                  </ng-container>
+
+                  <!-- Timestamp Column -->
+                  <ng-container matColumnDef="timestamp">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Last Updated</th>
+                    <td mat-cell *matCellDef="let row">{{ row.timestamp | date:'short' }}</td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                  <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="key-row"></tr>
+                </table>
+              </div>
+
+              <mat-paginator
+                #allKeysPaginator
+                [pageSizeOptions]="[10, 20, 50, 100]"
+                [pageSize]="20"
+                showFirstLastButtons>
+              </mat-paginator>
+            </mat-card>
+          </div>
+        </ng-template>
+      </mat-tab>
+
+      <!-- Accepted Tab -->
+      <mat-tab [label]="'Accepted (' + store.acceptedCount() + ')'">
+        <ng-template matTabContent>
+          <div class="tab-content">
+            <mat-card>
+              <mat-form-field class="search-field">
+                <mat-label>Search</mat-label>
+                <input matInput (keyup)="applyFilter($event, acceptedDataSource)" placeholder="Search minion ID...">
+                <mat-icon matSuffix>search</mat-icon>
+              </mat-form-field>
+
+              <div class="table-container">
+                <table mat-table [dataSource]="acceptedDataSource" matSort class="keys-table">
+                  <ng-container matColumnDef="minionId">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Minion ID</th>
+                    <td mat-cell *matCellDef="let row">{{ row.minionId }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="timestamp">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Last Updated</th>
+                    <td mat-cell *matCellDef="let row">{{ row.timestamp | date:'short' }}</td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="simpleDisplayedColumns"></tr>
+                  <tr mat-row *matRowDef="let row; columns: simpleDisplayedColumns;" class="key-row"></tr>
+                </table>
+              </div>
+
+              <mat-paginator
+                #acceptedPaginator
+                [pageSizeOptions]="[10, 20, 50, 100]"
+                [pageSize]="20"
+                showFirstLastButtons>
+              </mat-paginator>
+            </mat-card>
+          </div>
+        </ng-template>
+      </mat-tab>
+
+      <!-- Pending Tab -->
+      <mat-tab [label]="'Pending (' + store.pendingCount() + ')'">
+        <ng-template matTabContent>
+          <div class="tab-content">
+            <mat-card>
+              <mat-form-field class="search-field">
+                <mat-label>Search</mat-label>
+                <input matInput (keyup)="applyFilter($event, pendingDataSource)" placeholder="Search minion ID...">
+                <mat-icon matSuffix>search</mat-icon>
+              </mat-form-field>
+
+              <div class="table-container">
+                <table mat-table [dataSource]="pendingDataSource" matSort class="keys-table">
+                  <ng-container matColumnDef="minionId">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Minion ID</th>
+                    <td mat-cell *matCellDef="let row">{{ row.minionId }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="timestamp">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Last Updated</th>
+                    <td mat-cell *matCellDef="let row">{{ row.timestamp | date:'short' }}</td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="simpleDisplayedColumns"></tr>
+                  <tr mat-row *matRowDef="let row; columns: simpleDisplayedColumns;" class="key-row"></tr>
+                </table>
+              </div>
+
+              <mat-paginator
+                #pendingPaginator
+                [pageSizeOptions]="[10, 20, 50, 100]"
+                [pageSize]="20"
+                showFirstLastButtons>
+              </mat-paginator>
+            </mat-card>
+          </div>
+        </ng-template>
+      </mat-tab>
+
+      <!-- Rejected Tab -->
+      <mat-tab [label]="'Rejected (' + store.rejectedCount() + ')'">
+        <ng-template matTabContent>
+          <div class="tab-content">
+            <mat-card>
+              <mat-form-field class="search-field">
+                <mat-label>Search</mat-label>
+                <input matInput (keyup)="applyFilter($event, rejectedDataSource)" placeholder="Search minion ID...">
+                <mat-icon matSuffix>search</mat-icon>
+              </mat-form-field>
+
+              <div class="table-container">
+                <table mat-table [dataSource]="rejectedDataSource" matSort class="keys-table">
+                  <ng-container matColumnDef="minionId">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Minion ID</th>
+                    <td mat-cell *matCellDef="let row">{{ row.minionId }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="timestamp">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Last Updated</th>
+                    <td mat-cell *matCellDef="let row">{{ row.timestamp | date:'short' }}</td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="simpleDisplayedColumns"></tr>
+                  <tr mat-row *matRowDef="let row; columns: simpleDisplayedColumns;" class="key-row"></tr>
+                </table>
+              </div>
+
+              <mat-paginator
+                #rejectedPaginator
+                [pageSizeOptions]="[10, 20, 50, 100]"
+                [pageSize]="20"
+                showFirstLastButtons>
+              </mat-paginator>
+            </mat-card>
+          </div>
+        </ng-template>
+      </mat-tab>
+    </mat-tab-group>
+  }
+</div>

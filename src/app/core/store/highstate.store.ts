@@ -80,7 +80,6 @@ export const HighstateStore = signalStore(
       return s?.averageDuration ?? 0;
     }),
 
-    // ✅ FIX: Ensure uniqueMinions is properly computed
     uniqueMinions: computed(() => {
       const s = summary();
       return s?.uniqueMinions ?? 0;
@@ -134,7 +133,6 @@ export const HighstateStore = signalStore(
       async refreshAll() {
         patchState(store, { isLoading: true });
         try {
-          // ✅ Load in sequence to ensure data is available
           await this.loadSummary();
           await this.loadExecutions();
           await this.loadStatsByMinion();

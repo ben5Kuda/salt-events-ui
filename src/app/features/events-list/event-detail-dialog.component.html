@@ -1,0 +1,115 @@
+<h2 mat-dialog-title>
+  <mat-icon>event</mat-icon>
+  Event Details
+</h2>
+
+<mat-dialog-content>
+  <!-- Basic Information -->
+  <div class="detail-section">
+    <h3>Basic Information</h3>
+    <div class="detail-grid">
+      <div class="detail-item">
+        <span class="label">Event ID:</span>
+        <span class="value">{{ event.event_id }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="label">Job ID:</span>
+        <span class="value">{{ event.job_id || 'N/A' }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="label">Timestamp:</span>
+        <span class="value">{{ event.timestamp | date:'medium' }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="label">Event Type:</span>
+        <mat-chip>{{ event.event_type }}</mat-chip>
+      </div>
+    </div>
+  </div>
+
+  <!-- Event Action & Arguments -->
+  <div class="detail-section">
+    <h3>Event Action & Arguments</h3>
+    <div class="detail-grid">
+      <div class="detail-item full-width">
+        <span class="label">Primary Action:</span>
+        <span class="value action-highlight">{{ getEventAction() }}</span>
+      </div>
+      @if (getArguments().length > 1) {
+        <div class="detail-item full-width">
+          <span class="label">Additional Arguments:</span>
+          <div class="arguments-list">
+            @for (arg of getArguments().slice(1); track $index) {
+              <code class="argument-item">{{ formatArgument(arg) }}</code>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Execution Details -->
+  <div class="detail-section">
+    <h3>Execution Details</h3>
+    <div class="detail-grid">
+      <div class="detail-item">
+        <span class="label">Function:</span>
+        <span class="value">{{ event.function || 'N/A' }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="label">Minion ID:</span>
+        <span class="value">{{ event.minion_id || 'N/A' }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="label">Success:</span>
+        <div class="success-indicator">
+          @if (event.success) {
+            <mat-icon class="success-icon">check_circle</mat-icon>
+            <span class="success-text">Success</span>
+          } @else {
+            <mat-icon class="failure-icon">cancel</mat-icon>
+            <span class="failure-text">Failed</span>
+          }
+        </div>
+      </div>
+      @if (!event.success && getFailureReason()) {
+        <div class="detail-item full-width">
+          <span class="label">Failure Reason:</span>
+          <div class="failure-reason">
+            <mat-icon class="warning-icon">warning</mat-icon>
+            <span class="value">{{ getFailureReason() }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Return Data (if available) -->
+  @if (hasReturnData()) {
+    <div class="detail-section">
+      <h3>Return Data Summary</h3>
+      <div class="return-summary">
+        <div class="summary-item">
+          <span class="label">Return Code:</span>
+          <span class="value">{{ getReturnCode() }}</span>
+        </div>
+        @if (getReturnData()) {
+          <div class="summary-item full-width">
+            <span class="label">Details:</span>
+            <pre class="return-data">{{ formatReturnData() }}</pre>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Raw Data -->
+  <div class="detail-section">
+    <h3>Raw Data</h3>
+    <pre class="json-display">{{ formatRawData() }}</pre>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Close</button>
+</mat-dialog-actions>

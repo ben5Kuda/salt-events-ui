@@ -1,0 +1,255 @@
+<div class="highstate-container">
+  <!-- Header -->
+  <div class="header">
+    <h1>
+      <mat-icon>assignment_turned_in</mat-icon>
+      Highstate Executions
+    </h1>
+    <button mat-raised-button color="primary" (click)="refresh()">
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  @if (store.isLoading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Loading highstate executions...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (store.error() && !store.isLoading()) {
+    <mat-card class="error-card">
+      <mat-icon color="warn">error</mat-icon>
+      <p>{{ store.error() }}</p>
+      <button mat-raised-button color="primary" (click)="refresh()">
+        Try Again
+      </button>
+    </mat-card>
+  }
+
+  <!-- Content -->
+  @if (!store.isLoading() && !store.error()) {
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+      <mat-card class="summary-card">
+        <mat-icon class="card-icon primary">play_circle</mat-icon>
+        <div class="card-content">
+          <div class="card-value">{{ store.totalExecutions() }}</div>
+          <div class="card-label">Total Executions</div>
+        </div>
+      </mat-card>
+
+      <mat-card class="summary-card">
+        <mat-icon class="card-icon success">check_circle</mat-icon>
+        <div class="card-content">
+          <div class="card-value">{{ store.successRate() | number:'1.1-1' }}%</div>
+          <div class="card-label">Success Rate</div>
+        </div>
+      </mat-card>
+
+      <mat-card class="summary-card">
+        <mat-icon class="card-icon warning">update</mat-icon>
+        <div class="card-content">
+          <div class="card-value">{{ store.changeRate() | number:'1.1-1' }}%</div>
+          <div class="card-label">Change Rate</div>
+        </div>
+      </mat-card>
+
+      <mat-card class="summary-card">
+        <mat-icon class="card-icon info">devices</mat-icon>
+        <div class="card-content">
+          <div class="card-value">{{ store.uniqueMinions() }}</div>
+          <div class="card-label">Unique Minions</div>
+        </div>
+      </mat-card>
+    </div>
+
+    <!-- Tabs -->
+    <mat-tab-group class="content-tabs">
+      <!-- Recent Executions Tab -->
+      <mat-tab label="Recent Executions">
+        <div class="tab-content">
+          <mat-card>
+            <!-- Search -->
+            <mat-form-field class="search-field">
+              <mat-label>Search</mat-label>
+              <input matInput (keyup)="applyExecutionFilter($event)" placeholder="Search minion ID, job ID, or status">
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+
+            <!-- Table -->
+            <div class="table-container">
+              <table mat-table [dataSource]="filteredExecutions()" class="executions-table" matSort>
+                <!-- Timestamp Column -->
+                <ng-container matColumnDef="timestamp">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Timestamp</th>
+                  <td mat-cell *matCellDef="let row">{{ row.timestamp | date:'short' }}</td>
+                </ng-container>
+
+                <!-- Minion ID Column -->
+                <ng-container matColumnDef="minionId">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Minion ID</th>
+                  <td mat-cell *matCellDef="let row">{{ row.minionId }}</td>
+                </ng-container>
+
+                <!-- Job ID Column -->
+                <ng-container matColumnDef="jobId">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Job ID</th>
+                  <td mat-cell *matCellDef="let row" class="job-id">{{ row.jobId }}</td>
+                </ng-container>
+
+                <!-- Status Column -->
+                <ng-container matColumnDef="status">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+                  <td mat-cell *matCellDef="let row">
+                    <mat-chip [class.success-chip]="row.success" [class.failed-chip]="!row.success">
+                      {{ row.success ? 'Success' : 'Failed' }}
+                    </mat-chip>
+                  </td>
+                </ng-container>
+
+                <!-- States Column -->
+                <ng-container matColumnDef="states">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>States</th>
+                  <td mat-cell *matCellDef="let row">{{ row.totalStates }}</td>
+                </ng-container>
+
+                <!-- Changed States Column -->
+                <ng-container matColumnDef="changedStates">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Changed States</th>
+                  <td mat-cell *matCellDef="let row" class="changed-value">{{ row.changedStates }}</td>
+                </ng-container>
+
+                <!-- Total Changes Column -->
+                <ng-container matColumnDef="totalChanges">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Total Changes</th>
+                  <td mat-cell *matCellDef="let row" class="info-value">{{ row.totalPropertyChanges }}</td>
+                </ng-container>
+
+                <!-- Failed Column -->
+                <ng-container matColumnDef="failed">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Failed</th>
+                  <td mat-cell *matCellDef="let row" [class.failed-value]="row.failedStates > 0">
+                    {{ row.failedStates }}
+                  </td>
+                </ng-container>
+
+                <!-- Duration Column -->
+                <ng-container matColumnDef="duration">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Duration</th>
+                  <td mat-cell *matCellDef="let row">{{ formatDuration(row.duration) }}</td>
+                </ng-container>
+
+                <!-- Actions Column -->
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef>Actions</th>
+                  <td mat-cell *matCellDef="let row">
+                    <button mat-icon-button (click)="viewDetails(row)" color="primary">
+                      <mat-icon>visibility</mat-icon>
+                    </button>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="executionDisplayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: executionDisplayedColumns;" class="execution-row"></tr>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            <mat-paginator
+              [length]="filteredExecutions().length"
+              [pageSize]="20"
+              [pageSizeOptions]="[10, 20, 50, 100]"
+              showFirstLastButtons>
+            </mat-paginator>
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <!-- By Minion Tab -->
+      <mat-tab label="By Minion">
+        <div class="tab-content">
+          <mat-card>
+            <!-- Search -->
+            <mat-form-field class="search-field">
+              <mat-label>Search</mat-label>
+              <input matInput (keyup)="applyMinionFilter($event)" placeholder="Search minion ID">
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+
+            <!-- Table -->
+            <div class="table-container">
+              <table mat-table [dataSource]="filteredMinions()" class="minions-table" matSort>
+                <!-- Minion ID Column -->
+                <ng-container matColumnDef="minionId">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Minion ID</th>
+                  <td mat-cell *matCellDef="let row">{{ row.minionId }}</td>
+                </ng-container>
+
+                <!-- Executions Column -->
+                <ng-container matColumnDef="executions">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Executions</th>
+                  <td mat-cell *matCellDef="let row">{{ row.executionCount }}</td>
+                </ng-container>
+
+                <!-- Success Rate Column -->
+                <ng-container matColumnDef="successRate">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Success Rate</th>
+                  <td mat-cell *matCellDef="let row" [ngClass]="getSuccessRateClass(row.successRate)">
+                    {{ row.successRate | number:'1.1-1' }}%
+                  </td>
+                </ng-container>
+
+                <!-- Avg Duration Column -->
+                <ng-container matColumnDef="avgDuration">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Avg Duration</th>
+                  <td mat-cell *matCellDef="let row">{{ formatDuration(row.averageDuration) }}</td>
+                </ng-container>
+
+                <!-- Total States Column -->
+                <ng-container matColumnDef="totalStates">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Total States</th>
+                  <td mat-cell *matCellDef="let row">{{ row.totalStates }}</td>
+                </ng-container>
+
+                <!-- Changed Column -->
+                <ng-container matColumnDef="changed">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Changed</th>
+                  <td mat-cell *matCellDef="let row" class="changed-value">{{ row.changedStates }}</td>
+                </ng-container>
+
+                <!-- Failed Column -->
+                <ng-container matColumnDef="failed">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Failed</th>
+                  <td mat-cell *matCellDef="let row" [class.failed-value]="row.failedStates > 0">
+                    {{ row.failedStates }}
+                  </td>
+                </ng-container>
+
+                <!-- Last Execution Column -->
+                <ng-container matColumnDef="lastExecution">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>Last Execution</th>
+                  <td mat-cell *matCellDef="let row">{{ row.lastExecution | date:'short' }}</td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="minionDisplayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: minionDisplayedColumns;" class="minion-row"></tr>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            <mat-paginator
+              [length]="filteredMinions().length"
+              [pageSize]="20"
+              [pageSizeOptions]="[10, 20, 50, 100]"
+              showFirstLastButtons>
+            </mat-paginator>
+          </mat-card>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  }
+</div>

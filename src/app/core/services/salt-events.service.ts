@@ -32,7 +32,6 @@ export class SaltEventsService {
     return this.http.get<EventsResponse>(`${this.baseUrl}/events/minion/${minionId}`);
   }
 
-  // ✅ NEW: Get events summary
   getEventsSummary(): Observable<EventSummary> {
     return this.http.get<EventSummary>(`${this.baseUrl}/events/summary`);
   }

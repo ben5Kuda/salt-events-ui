@@ -1,0 +1,76 @@
+@if (store.isLoading()) {
+  <div class="loading">
+    <mat-spinner diameter="50"></mat-spinner>
+  </div>
+} @else if (store.stats()) {
+  <div class="stats-grid">
+    <!-- Total Events Card -->
+    <mat-card class="stat-card">
+      <mat-card-header>
+        <mat-icon class="stat-icon total">event</mat-icon>
+        <mat-card-title>Total Events (24h)</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="stat-value">{{ store.stats()!.totalEventsLast24Hours | number }}</div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Unique Minions Card -->
+    <mat-card class="stat-card">
+      <mat-card-header>
+        <mat-icon class="stat-icon minions">devices</mat-icon>
+        <mat-card-title>Unique Minions</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="stat-value">{{ store.stats()!.uniqueMinions | number }}</div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Unique Jobs Card -->
+    <mat-card class="stat-card">
+      <mat-card-header>
+        <mat-icon class="stat-icon jobs">work</mat-icon>
+        <mat-card-title>Unique Jobs</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="stat-value">{{ store.stats()!.uniqueJobs | number }}</div>
+      </mat-card-content>
+    </mat-card>
+
+    @if (detailed) {
+      <!-- Events by Type -->
+      <mat-card class="stat-card wide">
+        <mat-card-header>
+          <mat-card-title>Events by Type</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="type-list">
+            @for (item of store.stats()!.eventsByType; track item.eventType) {
+              <div class="type-item">
+                <span class="type-name">{{ item.eventType }}</span>
+                <span class="type-count">{{ item.count | number }}</span>
+              </div>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Events by Function -->
+      <mat-card class="stat-card wide">
+        <mat-card-header>
+          <mat-card-title>Top Functions</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="type-list">
+            @for (item of store.stats()!.eventsByFunction; track item.function) {
+              <div class="type-item">
+                <span class="type-name">{{ item.function }}</span>
+                <span class="type-count">{{ item.count | number }}</span>
+              </div>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+  </div>
+}
