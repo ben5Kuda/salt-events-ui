@@ -5,7 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router } from '@angular/router';
-import { SaltEventsStore } from '../../core/store/salt-events.store';
+import { EventsStore } from '../../core/store/events.store';
 import { HighstateStore } from '../../core/store/highstate.store';
 import { MinionKeysStore } from '../../core/store/minion-keys.store';
 import { MinionSummaryStore } from "../../core/store/minion-summary.store";
@@ -25,7 +25,7 @@ import { MinionConnectivityStore } from "../../core/store/minion-connectivity.st
   styleUrls: ['./dashboard.component.scss'],
 })
 export class DashboardComponent implements OnInit {
-  readonly eventsStore = inject(SaltEventsStore);
+  readonly eventsStore = inject(EventsStore);
   readonly highstateStore = inject(HighstateStore);
   readonly minionKeysStore = inject(MinionKeysStore);
   readonly minionSummaryStore = inject(MinionSummaryStore);

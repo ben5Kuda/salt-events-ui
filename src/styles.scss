@@ -87,3 +87,15 @@ pre {
   font-size: 13px;
   line-height: 1.5;
 }
+
+.mat-expansion-panel {
+  &.nav-expansion-panel {
+    margin: 0 !important;
+
+    .mat-expansion-panel-header-title {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+  }
+}

@@ -6,6 +6,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
+import { MatExpansionModule } from '@angular/material/expansion';
+import {MatMenuModule} from "@angular/material/menu";
 
 @Component({
   selector: 'app-root',
@@ -18,11 +20,14 @@ import { MatListModule } from '@angular/material/list';
     MatButtonModule,
     MatIconModule,
     MatSidenavModule,
-    MatListModule
+    MatListModule,
+    MatExpansionModule,
+    MatMenuModule
   ],
   templateUrl: 'app.component.html',
   styleUrls: [`app.component.scss`]
 })
 export class AppComponent {
-  title = 'Salt Events Monitor PoC';
+  title = 'Salt Events Monitor';
+  minionsExpanded = true; // Start with minions submenu expanded
 }

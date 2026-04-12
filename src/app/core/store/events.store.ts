@@ -11,29 +11,30 @@ import { SaltEvent } from '../models/salt-event.model';
 import { EventSummary } from '../models/event-summary.model';
 import { SaltEventsService } from '../services/salt-events.service';
 
-interface SaltEventsState {
+interface EventsState {
   events: SaltEvent[];
-  summary: EventSummary | null;  // ✅ Changed from stats
+  summary: EventSummary | null;
   selectedEvent: SaltEvent | null;
   isLoading: boolean;
   error: string | null;
   limit: number;
+  lastRefresh: number;
 }
 
-const initialState: SaltEventsState = {
+const initialState: EventsState = {
   events: [],
   summary: null,
   selectedEvent: null,
   isLoading: false,
   error: null,
   limit: 50,
+  lastRefresh: 0,
 };
 
-export const SaltEventsStore = signalStore(
+export const EventsStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
   withComputed(({ events, summary }) => ({
-    // ✅ Use summary data for accurate counts
     totalEvents: computed(() => summary()?.totalEventsLast24Hours ?? events().length),
     uniqueJobs: computed(() => summary()?.uniqueJobs ?? 0),
     uniqueMinions: computed(() => summary()?.uniqueMinions ?? 0),
@@ -48,7 +49,6 @@ export const SaltEventsStore = signalStore(
         }));
       }
 
-      // Fallback to calculating from loaded events
       const eventTypes = new Map<string, number>();
       events().forEach(event => {
         const count = eventTypes.get(event.event_type) || 0;
@@ -86,9 +86,11 @@ export const SaltEventsStore = signalStore(
 
         try {
           const response = await lastValueFrom(saltEventsService.getEvents(limit));
+
           patchState(store, {
             events: response.data,
             isLoading: false,
+            lastRefresh: Date.now(),
           });
         } catch (error) {
           patchState(store, {
@@ -98,7 +100,6 @@ export const SaltEventsStore = signalStore(
         }
       },
 
-      // ✅ NEW: Load summary
       async loadSummary() {
         patchState(store, { isLoading: true, error: null });
 
@@ -107,6 +108,7 @@ export const SaltEventsStore = signalStore(
           patchState(store, {
             summary,
             isLoading: false,
+            lastRefresh: Date.now(),
           });
         } catch (error) {
           patchState(store, {
@@ -130,9 +132,10 @@ export const SaltEventsStore = signalStore(
 
       async refreshAll() {
         const { limit } = store;
-        // ✅ Load summary first for accurate stats
-        await this.loadSummary();
-        await this.loadEvents(limit());
+        await Promise.all([
+          this.loadSummary(),
+          this.loadEvents(limit())
+        ]);
       }
     };
   })

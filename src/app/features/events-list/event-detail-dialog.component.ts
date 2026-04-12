@@ -23,118 +23,130 @@ export class EventDetailDialogComponent {
   constructor(@Inject(MAT_DIALOG_DATA) public event: SaltEvent) {}
 
   getEventAction(): string {
+    if (this.event.event_action) {
+      return this.event.event_action;
+    }
+
     try {
       const args = this.event.original_data?.arg;
       if (args && Array.isArray(args) && args.length > 0) {
-        return this.formatArgument(args[0]);
+        return args[0];
       }
-      return this.event.function || 'N/A';
+
+      // Fallback to fun property
+      const fun = this.event.original_data?.fun;
+      if (fun) {
+        return fun;
+      }
     } catch {
-      return 'N/A';
+      // Ignore errors
     }
+
+    // Fallback to function property
+    return this.event.function || 'N/A';
   }
 
-  getArguments(): any[] {
+  getArguments(): string[] {
     try {
       const args = this.event.original_data?.arg;
       if (args && Array.isArray(args)) {
-        return args;
+        return args.filter(arg => typeof arg === 'string');
       }
-      return [];
     } catch {
-      return [];
+      // Ignore errors
     }
+    return [];
   }
 
-  formatArgument(arg: any): string {
-    if (typeof arg === 'string') {
+  formatArgument(arg: string): string {
+    // Try to pretty-print if it's JSON
+    try {
+      const parsed = JSON.parse(arg);
+      return JSON.stringify(parsed, null, 2);
+    } catch {
       return arg;
     }
-    if (typeof arg === 'object' && arg !== null) {
-      return JSON.stringify(arg, null, 2);
-    }
-    return String(arg);
   }
 
   getFailureReason(): string | null {
-    try {
-      const originalData = this.event.original_data;
-
-      // Check for error message in return data
-      if (originalData?.return) {
-        const returnData = originalData.return;
-
-        // Check for error in return
-        if (typeof returnData === 'object' && returnData !== null) {
-          // Look for common error fields
-          if (returnData.error) {
-            return returnData.error;
-          }
-          if (returnData.comment) {
-            return returnData.comment;
-          }
-          if (returnData.stderr) {
-            return returnData.stderr;
-          }
-
-          // Check for failed states in highstate returns
-          if (typeof returnData === 'object') {
-            for (const key in returnData) {
-              const state = returnData[key];
-              if (state && typeof state === 'object' && state.result === false) {
-                return state.comment || `State ${key} failed`;
-              }
-            }
-          }
-        }
-
-        // If return is a string error message
-        if (typeof returnData === 'string') {
-          return returnData;
-        }
-      }
-
-      // Check retcode
-      if (originalData?.retcode && originalData.retcode !== 0) {
-        return `Process exited with code ${originalData.retcode}`;
-      }
-
-      return null;
-    } catch {
+    if (this.event.success !== false) {
       return null;
     }
+
+    try {
+      // Try to get comment from return data
+      const returnData = this.event.original_data?.return;
+      if (returnData && typeof returnData === 'object') {
+        if ('comment' in returnData) {
+          return returnData.comment as string;
+        }
+      }
+
+      // Try to get stderr
+      const stderr = this.event.original_data?.stderr;
+      if (stderr && typeof stderr === 'string' && stderr.trim()) {
+        return stderr;
+      }
+
+      // Try to get error message
+      const error = this.event.original_data?.error;
+      if (error && typeof error === 'string') {
+        return error;
+      }
+    } catch {
+      // Ignore errors
+    }
+
+    return null;
   }
 
   hasReturnData(): boolean {
-    return this.event.original_data?.return != null;
+    try {
+      return !!this.event.original_data?.return;
+    } catch {
+      return false;
+    }
   }
 
   getReturnCode(): string {
-    return this.event.original_data?.retcode?.toString() || 'N/A';
+    try {
+      const retcode = this.event.original_data?.retcode;
+      if (retcode !== undefined && retcode !== null) {
+        return retcode.toString();
+      }
+    } catch {
+      // Ignore errors
+    }
+    return 'N/A';
   }
 
   getReturnData(): any {
-    return this.event.original_data?.return;
+    try {
+      return this.event.original_data?.return;
+    } catch {
+      return null;
+    }
   }
 
   formatReturnData(): string {
     const returnData = this.getReturnData();
-    if (!returnData) return 'No return data';
+    if (!returnData) return 'N/A';
 
-    if (typeof returnData === 'string') {
-      return returnData;
+    try {
+      if (typeof returnData === 'object') {
+        return JSON.stringify(returnData, null, 2);
+      }
+      return returnData.toString();
+    } catch {
+      return 'Unable to format return data';
     }
-
-    if (typeof returnData === 'object') {
-      return JSON.stringify(returnData, null, 2);
-    }
-
-    return String(returnData);
   }
 
   formatRawData(): string {
     try {
-      return JSON.stringify(this.event.original_data, null, 2);
+      // Use original_data if available, otherwise use the whole event
+      const dataToFormat = this.event.original_data || this.event;
+      return JSON.stringify(dataToFormat, null, 2);
     } catch {
       return 'Unable to format raw data';
     }

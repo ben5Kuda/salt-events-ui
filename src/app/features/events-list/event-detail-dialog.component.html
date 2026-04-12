@@ -63,16 +63,19 @@
       <div class="detail-item">
         <span class="label">Success:</span>
         <div class="success-indicator">
-          @if (event.success) {
+          @if (event.success === true) {
             <mat-icon class="success-icon">check_circle</mat-icon>
             <span class="success-text">Success</span>
-          } @else {
+          } @else if (event.success === false) {
             <mat-icon class="failure-icon">cancel</mat-icon>
             <span class="failure-text">Failed</span>
+          } @else {
+            <mat-icon class="unknown-icon">help_outline</mat-icon>
+            <span class="unknown-text">N/A</span>
           }
         </div>
       </div>
-      @if (!event.success && getFailureReason()) {
+      @if (event.success === false && getFailureReason()) {
         <div class="detail-item full-width">
           <span class="label">Failure Reason:</span>
           <div class="failure-reason">

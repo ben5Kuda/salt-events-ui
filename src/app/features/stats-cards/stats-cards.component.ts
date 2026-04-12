@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { SaltEventsStore } from '../../core/store/salt-events.store';
+import { EventsStore } from '../../core/store/events.store';
 
 @Component({
   selector: 'app-stats-cards',
@@ -19,5 +19,5 @@ import { SaltEventsStore } from '../../core/store/salt-events.store';
 })
 export class StatsCardsComponent {
   @Input() detailed = false;
-  readonly store = inject(SaltEventsStore);
+  readonly store = inject(EventsStore);
 }

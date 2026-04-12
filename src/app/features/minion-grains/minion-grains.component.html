@@ -19,7 +19,7 @@
           <mat-spinner diameter="50"></mat-spinner>
           <p>Loading minion grains...</p>
         </div>
-      } @else if (dataSource.data.length === 0) {
+      } @else if (store.minions().length === 0) {
         <div class="no-data">
           <mat-icon>inbox</mat-icon>
           <p>No minion grains found</p>
@@ -53,13 +53,14 @@
         <!-- Search Field -->
         <mat-form-field class="search-field">
           <mat-label>Search</mat-label>
-          <input matInput (keyup)="applyFilter($event)" placeholder="Search by minion ID, OS, IP...">
+          <input matInput #searchInput (input)="applyFilter(searchInput.value)"
+                 placeholder="Search by minion ID, OS, IP...">
           <mat-icon matSuffix>search</mat-icon>
         </mat-form-field>
 
         <!-- Table -->
         <div class="table-container">
-          <table mat-table [dataSource]="dataSource" matSort class="minions-table">
+        <table mat-table [dataSource]="paginatedMinions()" class="minions-table">
             <!-- Minion ID Column -->
             <ng-container matColumnDef="minionId">
               <th mat-header-cell *matHeaderCellDef mat-sort-header>Minion ID</th>

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ViewChild, AfterViewInit, effect } from '@angular/core';
+import { Component, inject, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -7,9 +7,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
-import { MatSortModule, MatSort } from '@angular/material/sort';
+import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MinionGrainsStore } from '../../core/store/minion-grains.store';
@@ -30,16 +29,16 @@ import { MinionGrainDetailDialogComponent } from './minion-grain-detail-dialog.c
     MatInputModule,
     MatTableModule,
     MatPaginatorModule,
-    MatSortModule,
     MatChipsModule,
     MatTooltipModule
   ],
   templateUrl: './minion-grains.component.html',
   styleUrls: ['./minion-grains.component.scss']
 })
-export class MinionGrainsComponent implements OnInit, AfterViewInit {
+export class MinionGrainsComponent implements OnInit {
   readonly store = inject(MinionGrainsStore);
   private readonly dialog = inject(MatDialog);
+  defaultPageSize = 10;
 
   displayedColumns: string[] = [
     'minionId',
@@ -51,42 +50,51 @@ export class MinionGrainsComponent implements OnInit, AfterViewInit {
     'actions'
   ];
 
-  dataSource = new MatTableDataSource<MinionGrain>([]);
+  // Signals for filtering and pagination
+  filterText = signal('');
+  pageSize = signal(this.defaultPageSize);
+  pageIndex = signal(0);
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
+  // Computed signal for filtered minions
+  filteredMinions = computed(() => {
+    const minions = this.store.minions();
+    const filter = this.filterText().toLowerCase();
 
-  constructor() {
-    effect(() => {
-      const minions = this.store.minions();
-      this.dataSource.data = minions;
-    });
-  }
+    if (!filter) return minions;
+
+    return minions.filter((m: { minionId: string; os: string; osVersion: string; ipAddresses: any[]; }) =>
+      m.minionId.toLowerCase().includes(filter) ||
+      m.os.toLowerCase().includes(filter) ||
+      m.osVersion.toLowerCase().includes(filter) ||
+      m.ipAddresses.some(ip => ip.includes(filter))
+    );
+  });
+
+  // Computed signal for paginated minions
+  paginatedMinions = computed(() => {
+    const minions = this.filteredMinions();
+    const start = this.pageIndex() * this.pageSize();
+    return minions.slice(start, start + this.pageSize());
+  });
+
+  totalMinions = computed(() => this.filteredMinions().length);
 
   async ngOnInit() {
     await this.refresh();
   }
 
-  ngAfterViewInit() {
-    setTimeout(() => {
-      this.dataSource.paginator = this.paginator;
-      this.dataSource.sort = this.sort;
-    });
+  applyFilter(value: string) {
+    this.filterText.set(value.trim().toLowerCase());
+    this.pageIndex.set(0);
   }
 
-  applyFilter(event: Event) {
-    const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
-
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
-    }
+  onPageChange(event: PageEvent) {
+    this.pageIndex.set(event.pageIndex);
+    this.pageSize.set(event.pageSize);
   }
 
   async refresh() {
-    await Promise.all([
-      this.store.loadMinions()
-    ]);
+    await this.store.loadMinions();
   }
 
   viewDetails(minion: MinionGrain) {

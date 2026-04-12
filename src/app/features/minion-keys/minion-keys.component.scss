@@ -55,14 +55,18 @@
 
   &.accepted {
     border-left: 4px solid #4caf50;
+    color: #4caf50;
   }
+
 
   &.pending {
     border-left: 4px solid #ff9800;
+    color: #4caf50;
   }
 
   &.rejected {
     border-left: 4px solid #f44336;
+    color: #4caf50;
   }
 
   .card-icon {

@@ -76,13 +76,14 @@
             <!-- Search -->
             <mat-form-field class="search-field">
               <mat-label>Search</mat-label>
-              <input matInput (keyup)="applyExecutionFilter($event)" placeholder="Search minion ID, job ID, or status">
+              <input matInput #execSearch (input)="applyExecutionFilter(execSearch.value)"
+                     placeholder="Search minion ID, job ID, or status">
               <mat-icon matSuffix>search</mat-icon>
             </mat-form-field>
 
             <!-- Table -->
             <div class="table-container">
-              <table mat-table [dataSource]="filteredExecutions()" class="executions-table" matSort>
+              <table mat-table [dataSource]="paginatedExecutions()" class="executions-table">
                 <!-- Timestamp Column -->
                 <ng-container matColumnDef="timestamp">
                   <th mat-header-cell *matHeaderCellDef mat-sort-header>Timestamp</th>
@@ -160,9 +161,11 @@
 
             <!-- Pagination -->
             <mat-paginator
-              [length]="filteredExecutions().length"
-              [pageSize]="20"
+              [length]="totalExecutions()"
+              [pageSize]="executionPageSize()"
+              [pageIndex]="executionPageIndex()"
               [pageSizeOptions]="[10, 20, 50, 100]"
+              (page)="onExecutionPageChange($event)"
               showFirstLastButtons>
             </mat-paginator>
           </mat-card>
@@ -176,13 +179,14 @@
             <!-- Search -->
             <mat-form-field class="search-field">
               <mat-label>Search</mat-label>
-              <input matInput (keyup)="applyMinionFilter($event)" placeholder="Search minion ID">
+              <input matInput #minionSearch (input)="applyMinionFilter(minionSearch.value)"
+                     placeholder="Search minion ID">
               <mat-icon matSuffix>search</mat-icon>
             </mat-form-field>
 
             <!-- Table -->
             <div class="table-container">
-              <table mat-table [dataSource]="filteredMinions()" class="minions-table" matSort>
+              <table mat-table [dataSource]="paginatedMinions()" class="minions-table">
                 <!-- Minion ID Column -->
                 <ng-container matColumnDef="minionId">
                   <th mat-header-cell *matHeaderCellDef mat-sort-header>Minion ID</th>
@@ -242,9 +246,11 @@
 
             <!-- Pagination -->
             <mat-paginator
-              [length]="filteredMinions().length"
-              [pageSize]="20"
+              [length]="totalMinions()"
+              [pageSize]="minionPageSize()"
+              [pageIndex]="minionPageIndex()"
               [pageSizeOptions]="[10, 20, 50, 100]"
+              (page)="onMinionPageChange($event)"
               showFirstLastButtons>
             </mat-paginator>
           </mat-card>
