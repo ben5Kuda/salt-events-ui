@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -32,48 +32,35 @@ export class DashboardComponent implements OnInit {
   readonly connectivityStore = inject(MinionConnectivityStore);
   private readonly router = inject(Router);
 
+  // Track initial loading state
+  initialLoadComplete = signal(false);
+
   ngOnInit() {
-    console.log('DashboardComponent ngOnInit');
-    console.log('Stores initialized:', {
-      events: !!this.eventsStore,
-      highstate: !!this.highstateStore,
-      keys: !!this.minionKeysStore,
-      summary: !!this.minionSummaryStore,
-      connectivity: !!this.connectivityStore
-    });
     this.refreshAll();
   }
 
   isLoading(): boolean {
-    const loading = this.eventsStore.isLoading() ||
+    return !this.initialLoadComplete() && (
+      this.eventsStore.isLoading() ||
       this.highstateStore.isLoading() ||
-      this.minionKeysStore.isLoading();
-    console.log('isLoading:', loading);
-    return loading;
+      this.minionKeysStore.isLoading() ||
+      this.minionSummaryStore.isLoading() ||
+      this.connectivityStore.isLoading()
+    );
   }
 
   async refreshAll() {
-    console.log('Starting refresh...');
-    try {
-      await Promise.all([
-        this.eventsStore.loadSummary(),
-        this.eventsStore.loadEvents(50),
-        this.highstateStore.refreshAll(),
-        this.minionKeysStore.loadKeys(),
-        this.minionSummaryStore.loadAll(),
-        this.connectivityStore.refreshAll()
-      ]);
-      console.log('All data loaded successfully');
-      console.log('Store states:', {
-        totalEvents: this.eventsStore.totalEvents(),
-        totalExecutions: this.highstateStore.totalExecutions(),
-        totalKeys: this.minionKeysStore.totalKeys(),
-        totalMinions: this.minionSummaryStore.versionSummary()?.totalMinions,
-        onlineMinions: this.connectivityStore.summary()?.onlineMinions
-      });
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-    }
+    // Start loading each store independently
+    Promise.all([
+      this.eventsStore.loadSummary(),
+      this.eventsStore.loadEvents(50),
+      this.highstateStore.refreshAll(),
+      this.minionKeysStore.loadKeys(),
+      this.minionSummaryStore.loadAll(),
+      this.connectivityStore.refreshAll()
+    ]).finally(() => {
+      this.initialLoadComplete.set(true);
+    });
   }
 
   navigateTo(path: string) {
@@ -81,10 +68,12 @@ export class DashboardComponent implements OnInit {
   }
 
   getEventTypeClass(eventType: string): string {
-    if (eventType.includes('job')) return 'job-execution';
-    if (eventType.includes('auth')) return 'authentication';
-    if (eventType.includes('minion')) return 'minion-lifecycle';
-    if (eventType.includes('provision')) return 'provisioning';
+    if (eventType === 'job_execution') return 'job-execution';
+    if (eventType === 'authentication') return 'authentication';
+    if (eventType === 'minion_lifecycle') return 'minion-lifecycle';
+    if (eventType === 'provisioning') return 'provisioning';
+    if (eventType === 'runner') return 'runner';
+    if (eventType === 'state_execution') return 'state-execution';
     return '';
   }
 
