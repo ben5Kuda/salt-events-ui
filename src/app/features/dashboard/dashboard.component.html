@@ -10,14 +10,6 @@
     </button>
   </div>
 
-  <!-- Show a minimal initial loading state only on first load -->
-  @if (isLoading()) {
-    <div class="loading-container">
-      <mat-spinner diameter="50"></mat-spinner>
-      <p>Loading dashboard data...</p>
-    </div>
-  }
-
   <!-- Summary Cards - Always visible, each handles its own loading -->
   <div class="summary-grid">
     <!-- Events Summary -->
@@ -120,8 +112,146 @@
       </div>
     </mat-card>
 
-    <!-- Remaining cards follow the same pattern... -->
-    <!-- Keep all your other cards with their individual loading states -->
+    <!-- Minion Summary -->
+    <mat-card class="summary-card minion-summary-card" (click)="navigateTo('/minion-grains')">
+      <div class="card-header">
+        <mat-icon class="card-icon">computer</mat-icon>
+        <h2>Minion Summary</h2>
+      </div>
+      <div class="card-stats">
+        @if (minionSummaryStore.isLoading()) {
+          <mat-spinner diameter="40"></mat-spinner>
+        } @else {
+          <div class="stat-main">
+            <span class="stat-value">{{ minionSummaryStore.versionSummary()?.totalMinions || 0 }}</span>
+            <span class="stat-label">Total Minions</span>
+          </div>
+          <div class="stat-grid">
+            <div class="stat-item">
+              <span class="stat-label-small">Top OS Versions</span>
+              @for (osVersion of minionSummaryStore.topOsVersions(); track osVersion[0]) {
+                <div class="version-item">
+                  <span class="version-name">{{ osVersion[0] }}</span>
+                  <span class="version-count">{{ osVersion[1] }}</span>
+                </div>
+              }
+            </div>
+            <div class="stat-item">
+              <span class="stat-label-small">Top Salt Versions</span>
+              @for (saltVersion of minionSummaryStore.topSaltVersions(); track saltVersion[0]) {
+                <div class="version-item">
+                  <span class="version-name">{{ saltVersion[0] }}</span>
+                  <span class="version-count">{{ saltVersion[1] }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+      <div class="card-action">
+        <span>View Details</span>
+        <mat-icon>arrow_forward</mat-icon>
+      </div>
+    </mat-card>
+
+    <!-- Provisioning Events Card -->
+    <mat-card class="summary-card provisioning-card">
+      <div class="card-header">
+        <mat-icon class="card-icon">build</mat-icon>
+        <h2>Provisioning Events</h2>
+      </div>
+      <div class="card-stats">
+        @if (minionSummaryStore.isLoading()) {
+          <mat-spinner diameter="40"></mat-spinner>
+        } @else {
+          <div class="stat-grid">
+            <div class="stat-item">
+              <span class="stat-value-small">{{ minionSummaryStore.provisioningSummary()?.totalLast24Hours || 0 }}</span>
+              <span class="stat-label-small">Last 24 Hours</span>
+              <div class="success-rate" [class.high]="minionSummaryStore.provisioningSuccessRate24h() >= 80">
+                {{ minionSummaryStore.provisioningSuccessRate24h() }}% Success
+              </div>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value-small">{{ minionSummaryStore.provisioningSummary()?.totalLast7Days || 0 }}</span>
+              <span class="stat-label-small">Last 7 Days</span>
+              <div class="success-rate" [class.high]="minionSummaryStore.provisioningSuccessRate7d() >= 80">
+                {{ minionSummaryStore.provisioningSuccessRate7d() }}% Success
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </mat-card>
+
+    <!-- Minion Connectivity Card -->
+    <mat-card class="summary-card connectivity-card" (click)="navigateTo('/minion-grains')">
+      <div class="card-header">
+        <mat-icon class="card-icon">wifi</mat-icon>
+        <h2>Minion Connectivity</h2>
+      </div>
+      <div class="card-stats">
+        @if (connectivityStore.isLoading()) {
+          <mat-spinner diameter="40"></mat-spinner>
+        } @else if (connectivityStore.summary()) {
+          <div class="stat-main">
+            <span class="stat-value">{{ connectivityStore.summary()!.onlineMinions }}</span>
+            <span class="stat-label">Online Minions</span>
+          </div>
+          <div class="stat-grid">
+            <div class="stat-item online">
+              <span class="stat-value-small">{{ connectivityStore.summary()!.onlinePercentage | number:'1.0-1' }}%</span>
+              <span class="stat-label-small">Online Rate</span>
+            </div>
+            <div class="stat-item offline">
+              <span class="stat-value-small">{{ connectivityStore.summary()!.offlineMinions }}</span>
+              <span class="stat-label-small">Offline</span>
+            </div>
+            <div class="stat-item total">
+              <span class="stat-value-small">{{ connectivityStore.summary()!.totalMinions }}</span>
+              <span class="stat-label-small">Total</span>
+            </div>
+          </div>
+        }
+      </div>
+      <div class="card-action">
+        <span>View Details</span>
+        <mat-icon>arrow_forward</mat-icon>
+      </div>
+    </mat-card>
+
+    <!-- System Health -->
+    <mat-card class="summary-card health-card">
+      <div class="card-header">
+        <mat-icon class="card-icon">favorite</mat-icon>
+        <h2>System Health</h2>
+      </div>
+      <div class="card-stats">
+        <div class="health-items">
+          <div class="health-item">
+            <mat-icon class="health-icon success">check_circle</mat-icon>
+            <div class="health-info">
+              <span class="health-label">API Status</span>
+              <span class="health-value">Operational</span>
+            </div>
+          </div>
+          <div class="health-item">
+            <mat-icon class="health-icon success">storage</mat-icon>
+            <div class="health-info">
+              <span class="health-label">Database</span>
+              <span class="health-value">Connected</span>
+            </div>
+          </div>
+          <div class="health-item">
+            <mat-icon class="health-icon success">cloud</mat-icon>
+            <div class="health-info">
+              <span class="health-label">Salt Master</span>
+              <span class="health-value">Active</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-card>
   </div>
 
   <!-- Recent Activity -->
